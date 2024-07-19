@@ -214,12 +214,7 @@ __This is smartly handled using gray code(reduces error in switching) for the en
 
 The variables `freq` and `resolution` are used to specify the PWM parameters for the ledc channels are mentioned above.
 
-<br>
-```cpp
-uint8_t number[8]
-``` 
-
-is used as an integer array to hold the following data: [PWMA, PWMB, PWMC, DIRA, DIRB, DIRC, _, _]. This gives an efficient and simple way to handle all the values for all the motors together.
+`uint8_t number[8]` is used as an integer array to hold the following data: [PWMA, PWMB, PWMC, DIRA, DIRB, DIRC, _, _]. This gives an efficient and simple way to handle all the values for all the motors together.
 
 Control variables like `checkprint` and `movemotorsok` are used to ensure the debug information and motor output lines are changed only when a new dataframe is received on the CAN bus.
 
