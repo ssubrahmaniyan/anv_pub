@@ -9,7 +9,7 @@ Last Edited : 19 July 2024 <br>
 
 ---
 
-This ESP32 program is used to receive PWM and direction data for the motors on the rover using the CAN protocol and dataframe(from another source, likely the controller) and use PWM writing methods to control the motors' speed and direction.
+This ESP32 program is used to receive PWM and direction data for the motor drivers on the rover using the CAN protocol and dataframe(from another source, likely the controller) and use PWM writing methods to control the motor drivers; speed and direction.
 
 It also monitors and handles the encoder values using an interrupt which is triggered when the encoder output values change on either bit.
 
@@ -74,14 +74,14 @@ This maps the transmission and reciever pins of the can bus on the ESP32.
 #define BIN1 17
 #define BIN2 16
 ```
-The program handles two H-bridge motors labelled A and B. The pins specified above are the two terminals of the respective motors. The combination of two terminals enables bidirectional control for those motors. The values on the two terminals of each motor can be (1,0), (0,1) to control the direction of rotation.
+The program handles two H-bridge motor drivers labelled A and B. The pins specified above are the two terminals of the respective motor drivers. The combination of two terminals enables bidirectional control for those motor drivers. The values on the two terminals of each motor driver can be (1,0), (0,1) to control the direction of rotation.
 
 ```cpp
 #define PWMA 21
 #define PWMB 4
 #define PWMC 2
 ```
-These lines define the pins for the PWM outputs for the motors. They essentially control the speed of rotation of the motors relative to its maximum capacity.
+These lines define the pins for the PWM outputs for the motor drivers. They essentially control the speed of rotation of the motor drivers relative to its maximum capacity.
 
 ```cpp
 #define DIRC 15
@@ -112,7 +112,7 @@ void CANinit()
   CAN.onReceive(onReceive);
 }
 ```
-This method sets up the I/O pins for the CAN controller and prints and error message if the configuration is unsuccessful. It also calls `CAN.onReceive()` with the pointer to another function `onReceive` which gets called everytime the CAN controller receives a Start of Frame(SOF) bit.
+This method sets up the I/O pins for the CAN controller and prints an error message if the configuration is unsuccessful. It also calls `CAN.onReceive()` with the pointer to another function `onReceive` which gets called everytime the CAN controller receives a Start of Frame(SOF) bit.
 
 `pinmodeinit()`:
 ```cpp
@@ -137,7 +137,7 @@ void pinmodeinit()
   
 }
 ```
-This function sets up all the motor control pins to the `OUTPUT` configuration(as they send data to the motors).
+This function sets up all the motor driver control pins to the `OUTPUT` configuration(as they send data to the motors).
 
 #### An overview of LEDC
 
@@ -161,7 +161,7 @@ The control flow of the program is best described in the flowchart below
 ---
 
 ### Motor control
-In the `loop()` function, which get called continuously as long as the program is running, the code snippet is used to control the motors with the data received through the CAN network.
+In the `loop()` function, which get called continuously as long as the program is running, the code snippet is used to control the motor drivers with the data received through the CAN network.
 
 ```cpp
 if(movemotorsok == 1)
@@ -182,7 +182,7 @@ movemotorsok = 0;
 ```
 `ledcWrite()` writes the PWM value in `number[]` to the corresponding channel. This is then handled and routed to the GPIO pin the ledc channel is connected to.
 
-The `digitalWrite()` methods here setup the direction of rotation of motors A and B(with H-bridge) and C using the `DIRC` variable. These directions are sources logically from the CAN message frame as mentioned above.
+The `digitalWrite()` methods here setup the direction of rotation of motor drivers A and B(with H-bridge) and C using the `DIRC` variable. These directions are sources logically from the CAN message frame as mentioned above.
 
 ---
 
