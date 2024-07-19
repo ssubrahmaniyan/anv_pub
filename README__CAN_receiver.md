@@ -31,6 +31,31 @@ While each section can be independently understood, it is reccomended to underst
 
 ### Overview of CAN framework
 
+The CAN is a framework used for efficient communication in networks of mobile devices and has a number of advantages over other communication protocol. A CAN bus generally has two wires TX and RX which are wrapped tight to minimize difference in interference. The messages are transmit in frames consisting of different parts as shown below.
+<br>
+
+![CAN frame](CAN-Frame.png)
+
+CAN can be used in ESP32 using the header import CAN.h
+
+```cpp
+void onReceive(int packetSize)
+{
+  int f=0;
+  while (CAN.available()) 
+  {
+    char k = (char) CAN.read();
+    number[f] = static_cast<uint8_t>(k);
+    f=f+1;      
+  }
+  checkprint = 1;
+  movemotorsok = 1;
+}
+```
+This program is called everytime a new frame is sent through the network which updates the values in the `number[]` array.
+
+The function `CAN.read()` reads the message frame and extracts the information in the data part of the frame and stores it as raw bytes in the `number[]` array.
+
 ---
 
 ### Pin configurations and purpose
@@ -130,6 +155,9 @@ The resolution specifies the number of bits in the PWM value. For example, in th
 
 ### Flow of control and logic handling
 
+The control flow of the program is best described in the flowchart below
+
+![flowchart](rx_flowchart.png)
 ---
 
 ### Motor control
@@ -185,10 +213,12 @@ __This is smartly handled using gray code(reduces error in switching) for the en
 ### Variable intuition
 
 The variables `freq` and `resolution` are used to specify the PWM parameters for the ledc channels are mentioned above.
+
 <br>
 ```cpp
 uint8_t number[8]
 ``` 
+
 is used as an integer array to hold the following data: [PWMA, PWMB, PWMC, DIRA, DIRB, DIRC, _, _]. This gives an efficient and simple way to handle all the values for all the motors together.
 
 Control variables like `checkprint` and `movemotorsok` are used to ensure the debug information and motor output lines are changed only when a new dataframe is received on the CAN bus.
