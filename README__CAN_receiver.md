@@ -1,5 +1,35 @@
 # TEAM ANVESHAK
 
+## ESP32 CAN SENDER DOCUMENTATION
+
+This README file is the documentation for the __ESP32_Can_Sender.ino__ program in the path *__Anveshak-Files/ESP32_Can_Sender/__*
+
+Author : __Bhuvanesh__ <br>
+Last Edited : 20 July 2024<br>
+
+## Variables used:
+* `bufftosendcan` : array used to store pwm and direction of last 3 motors, last two indices are always kept 0.
+* `uint8Value` : array used to send data from bufftosendcan to can.
+## Control flow:
+![full_potential (3)](https://github.com/user-attachments/assets/1316b651-a063-4b07-afc2-abf607a859d9)
+## `updateencoder()` ->
+![Screenshot 2024-07-19 215820](https://github.com/user-attachments/assets/371ba128-f90a-43e2-9eb3-ef61f2b87489)
+* the interrupt monitors the A channel of encoder and recors value whenever its value transitions to HIGH. 
+* If both are HIGH at that time then it add in CCW direction.if B is LOW during that time, then it adds in CW direction.
+## `movearmcomands()` ->
+in the rosmessageCb() function we recieve the pwm values for each of the 5 motors and process it in this function and then send it to CAN bus using `pushtoCAN()`.
+* if you take any value in the `arm_buf` list, depending on the sign of the value, the direction if motor is decided(making it HIGH or LOW) and speed is the absolute value.
+* and for the first 2 motors LED's are connected which glows based on the direction of those 2 motors.
+* then the pwm and direction values of other 3 motors are sent to the can transceiver.
+## `pinmodeinit()` ->
+here all pins are being defined.
+* for 1st 2 motors to identify their direction an LED is connected which glows based on their direction (arm_dir[0],arm_dir[1]).
+* the speed of these 1st 2 motors are controlled using pwm signals which come from pins: pwm[0],pwm[1] ; which are setup using ledC with specific freq and resolution which controls duty cycle.
+## `pushtocan()` ->
+This function is obvious as it gets data from the movearmcommands() using buffsendtocan variable, but here the last to indices of the array is always kept as 0.
+
+---
+
 ##  ESP32 CAN RECEIVER DOCUMENTATION
 
 This README file is the documentation for script __ESP32_Can_Receiver.ino__ program in the path *__Anveshak-Files/ESP32_Can_Receiver/__*
@@ -9,7 +39,7 @@ Last Edited : 19 July 2024 <br>
 
 ---
 
-This ESP32 program is used to receive PWM and direction data for the motor drivers on the rover using the CAN protocol and dataframe(from another source, likely the controller) and use PWM writing methods to control the motor drivers; speed and direction.
+This ESP32 program is used to receive PWM and direction data for the motors on the rover using the CAN protocol and dataframe(from another source, likely the controller) and use PWM writing methods to control the motors' speed and direction.
 
 It also monitors and handles the encoder values using an interrupt which is triggered when the encoder output values change on either bit.
 
@@ -74,14 +104,14 @@ This maps the transmission and reciever pins of the can bus on the ESP32.
 #define BIN1 17
 #define BIN2 16
 ```
-The program handles two H-bridge motor drivers labelled A and B. The pins specified above are the two terminals of the respective motor drivers. The combination of two terminals enables bidirectional control for those motor drivers. The values on the two terminals of each motor driver can be (1,0), (0,1) to control the direction of rotation.
+The program handles two H-bridge motors labelled A and B. The pins specified above are the two terminals of the respective motors. The combination of two terminals enables bidirectional control for those motors. The values on the two terminals of each motor can be (1,0), (0,1) to control the direction of rotation.
 
 ```cpp
 #define PWMA 21
 #define PWMB 4
 #define PWMC 2
 ```
-These lines define the pins for the PWM outputs for the motor drivers. They essentially control the speed of rotation of the motor drivers relative to its maximum capacity.
+These lines define the pins for the PWM outputs for the motors. They essentially control the speed of rotation of the motors relative to its maximum capacity.
 
 ```cpp
 #define DIRC 15
@@ -112,7 +142,7 @@ void CANinit()
   CAN.onReceive(onReceive);
 }
 ```
-This method sets up the I/O pins for the CAN controller and prints an error message if the configuration is unsuccessful. It also calls `CAN.onReceive()` with the pointer to another function `onReceive` which gets called everytime the CAN controller receives a Start of Frame(SOF) bit.
+This method sets up the I/O pins for the CAN controller and prints and error message if the configuration is unsuccessful. It also calls `CAN.onReceive()` with the pointer to another function `onReceive` which gets called everytime the CAN controller receives a Start of Frame(SOF) bit.
 
 `pinmodeinit()`:
 ```cpp
@@ -137,7 +167,7 @@ void pinmodeinit()
   
 }
 ```
-This function sets up all the motor driver control pins to the `OUTPUT` configuration(as they send data to the motors).
+This function sets up all the motor control pins to the `OUTPUT` configuration(as they send data to the motors).
 
 #### An overview of LEDC
 
@@ -161,7 +191,7 @@ The control flow of the program is best described in the flowchart below
 ---
 
 ### Motor control
-In the `loop()` function, which get called continuously as long as the program is running, the code snippet is used to control the motor drivers with the data received through the CAN network.
+In the `loop()` function, which get called continuously as long as the program is running, the code snippet is used to control the motors with the data received through the CAN network.
 
 ```cpp
 if(movemotorsok == 1)
@@ -182,7 +212,7 @@ movemotorsok = 0;
 ```
 `ledcWrite()` writes the PWM value in `number[]` to the corresponding channel. This is then handled and routed to the GPIO pin the ledc channel is connected to.
 
-The `digitalWrite()` methods here setup the direction of rotation of motor drivers A and B(with H-bridge) and C using the `DIRC` variable. These directions are sources logically from the CAN message frame as mentioned above.
+The `digitalWrite()` methods here setup the direction of rotation of motors A and B(with H-bridge) and C using the `DIRC` variable. These directions are sources logically from the CAN message frame as mentioned above.
 
 ---
 
